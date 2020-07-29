@@ -7,7 +7,7 @@ const connection = mysql.createConnection({
   password: "rootroot",
   database: "employee_db",
 });
-const cTable = require('console.table')
+const cTable = require("console.table");
 
 //////////////////// * MAIN MENU
 const fnMainMenu = async () => {
@@ -43,54 +43,58 @@ const fnAddEntity = async () => {
 
   switch (action) {
     case "DEPARTMENT":
-      return fnAddDepartment();
+      return fnAddDepartment(action.toLowerCase());
     case "ROLE":
-      return fnAddRole();
+      return fnAddRole(action.toLowerCase());
     case "EMPLOYEE":
-      return fnAddEmployee();
+      return fnAddEmployee(action.toLowerCase());
     case "EXIT":
       return;
   }
 };
 
 // add department
-const fnAddDepartment = async () => {
+const fnAddDepartment = async (db) => {
   const entry = await inquirer.prompt({
     name: "name",
     type: "input",
-    message: "Enter department name:"
+    message: "Enter department name:",
   });
 
   // todo add check if department already exists
 
-  console.log(entry.name)
+  console.log(entry.name);
 
   // add department
-  connection.query(`INSERT INTO department (name)
-  VALUES(?)`, entry.name, (err, data) => {
-    if (err) throw err;
-    console.log(`Adding ${entry.name} department...`)
-  });
+  connection.query(
+    `INSERT INTO ${db} (name)
+  VALUES(?)`,
+    entry.name,
+    (err, data) => {
+      if (err) throw err;
+      console.log(`Adding ${entry.name} department...`);
+    }
+  );
 
   // print departments back
-  connection.query("SELECT * FROM department", (err, data) => {
+  connection.query(`SELECT * FROM ${db}`, (err, data) => {
     if (err) throw err;
 
-    console.log("\n\r")
-    console.table()
-    console.log("\n\r")
+    console.log("\n\r");
+    console.table(data);
+    console.log("\n\r");
 
     fnMainMenu();
   });
 };
 
 // add role
-const fnAddRole = async () => {
+const fnAddRole = async (db) => {
   const entry = await inquirer.prompt([
     {
       name: "title",
       type: "input",
-      message: "Enter role title:"
+      message: "Enter role title:",
     },
     {
       name: "salary",
@@ -102,62 +106,70 @@ const fnAddRole = async () => {
       type: "input",
       message: "Enter the department ID for this role:",
     },
-  ])
+  ]);
 
   // todo add check if role already exists
 
-  console.log(entry.name)
+  console.log(entry.name);
 
   // add role
-  connection.query(`INSERT INTO role (title, salary, department_id)
-  VALUES(?, ?, ?)`, [entry.title, entry.salary, entry.department_id], (err, data) => {
-    if (err) throw err;
-    console.log(`Adding ${entry.name} department...`)
-  });
+  connection.query(
+    `INSERT INTO ${db} (title, salary, department_id)
+  VALUES(?, ?, ?)`,
+    [entry.title, entry.salary, entry.department_id],
+    (err, data) => {
+      if (err) throw err;
+      console.log(`Adding ${entry.title} role...`);
+    }
+  );
 
   // print all roles back
-  connection.query("SELECT * FROM role", (err, data) => {
+  connection.query(`SELECT * FROM ${db}`, (err, data) => {
     if (err) throw err;
 
-    console.log("\n\r")
-    console.table()
-    console.log("\n\r")
+    console.log("\n\r");
+    console.table(data);
+    console.log("\n\r");
 
     fnMainMenu();
   });
 };
 
 // add employee
-const fnAddEmployee = async () => {
+const fnAddEmployee = async (db) => {
   const entry = await inquirer.prompt([
     {
       name: "firstName",
       type: "input",
-      message: "Enter first name:"
+      message: "Enter first name:",
     },
     {
       name: "lastName",
       type: "input",
       message: "Enter last name:",
     },
-  ])
+  ]);
 
   // todo add check if employee already exists // mayyyyybe
 
   // add employee
-  connection.query(`INSERT INTO employee (first_name, last_name)
-  VALUES(?, ?)`, [entry.firstName, entry.lastName], (err, data) => {
-    if (err) throw err;
-    console.log(`Adding ${entry.name} department...`)
-  });
+  connection.query(
+    `INSERT INTO ${db} (first_name, last_name)
+  VALUES(?, ?)`,
+    [entry.firstName, entry.lastName],
+    (err, data) => {
+      if (err) throw err;
+      console.log(`Adding ${entry.firstName} ${entry.lastName} to database...`);
+    }
+  );
 
   // print all employees back
-  connection.query("SELECT * FROM employee", (err, data) => {
+  connection.query(`SELECT * FROM ${db}`, (err, data) => {
     if (err) throw err;
 
-    console.log("\n\r")
-    console.table()
-    console.log("\n\r")
+    console.log("\n\r");
+    console.table(data);
+    console.log("\n\r");
 
     fnMainMenu();
   });
@@ -177,9 +189,9 @@ const fnViewEntity = async () => {
   connection.query("SELECT * FROM " + action.toLowerCase(), (err, data) => {
     if (err) throw err;
 
-    console.log("\n\r")
-    console.table(data)
-    console.log("\n\r")
+    console.log("\n\r");
+    console.table(data);
+    console.log("\n\r");
 
     fnMainMenu();
   });
@@ -187,23 +199,121 @@ const fnViewEntity = async () => {
 
 //////////////// * UPDATE
 const fnUpdateEntity = async () => {
-  const { action } = await inquirer.prompt({
+  let count;
+  let { action } = await inquirer.prompt({
     name: "action",
     type: "list",
-    message: "Which type of data would you like to view?",
-    choices: ["DEPARTMENT", "ROLE", "EMPLOYEE", "EXIT"],
+    message: "Which type of data would you like to update?",
+    choices: ["ROLE", "EMPLOYEE", "EXIT"],
   });
 
+  connection.query("SELECT * FROM " + action.toLowerCase(), (err, data) => {
+    if (err) throw err;
+
+    console.log("\n\r");
+    console.table(data);
+    console.log("\n\r");
+  });
+
+  // get entries count
+  connection.query(
+    "SELECT COUNT(*) FROM " + action.toLowerCase(),
+    (err, data) => {
+      if (err) throw err;
+
+      count = parseInt(data[0]["COUNT(*)"]);
+    }
+  );
+
   switch (action) {
-    case "DEPARTMENT":
-      return;
     case "ROLE":
-      return;
+      let { id } = await inquirer.prompt({
+        name: "id",
+        type: "input",
+        message: "Enter ID of role you would like to edit:",
+      });
+      if (isNaN(id) || id > count || id <= 0) {
+        console.log("Enter valid number");
+        fnUpdateEntity();
+      } else {
+        console.log("updating role");
+        return fnUpdateRole(id);
+      }
     case "EMPLOYEE":
-      return;
+      let { empId } = await inquirer.prompt({
+        name: "empId",
+        type: "input",
+        message: "Enter ID of employee you would like to edit:",
+      });
+      if (isNaN(empId) || empId > count || empId <= 0) {
+        console.log("Enter valid number");
+        fnUpdateEntity();
+      } else {
+        return fnUpdateEmp(empId);
+      }
     case "EXIT":
       return;
   }
+};
+
+// update roles
+const fnUpdateRole = async (id) => {
+  let { col } = await inquirer.prompt({
+    name: "col",
+    type: "list",
+    message: "Which type of column would you like to edit?",
+    choices: ["TITLE", "SALARY", "DEPARTMENT_ID", "EXIT"],
+  });
+
+  let { val } = await inquirer.prompt({
+    name: "val",
+    type: "input",
+    message: "Enter new value:",
+  });
+
+  switch (col) {
+    case "TITLE":
+      break;
+    case "DEPARTMENT_ID":
+    case "SALARY":
+      if (isNaN(val)) {
+        console.log("Enter a valid number");
+        return fnUpdateEntity();
+      }
+    case "EXIT":
+      return fnUpdateEntity();
+  }
+
+  // set new value
+  connection.query(
+    `UPDATE role SET ${col.toLowerCase()} = ? WHERE id = ${id}`,
+    val,
+    (err, data) => {
+      if (err) throw err;
+      // console.log(data);
+      connection.query(`SELECT * FROM role`, (err, data) => {
+        if (err) throw err;
+        console.table(data);
+        fnMainMenu();
+      });
+    }
+  );
+};
+
+// update employees
+const fnUpdateEmp = async (id) => {
+  let { col } = await inquirer.prompt({
+    name: "col",
+    type: "list",
+    message: "Which type of column would you like to edit?",
+    choices: ["FIRST_NAME", "LAST_NAME", "ROLE_ID", "MANAGER_ID", "EXIT"],
+  });
+
+  let { val } = await inquirer.prompt({
+    name: "val",
+    type: "input",
+    message: "Enter new value:",
+  });
 };
 
 //////////////// * DELETE
@@ -226,8 +336,6 @@ const fnRemoveEntity = async () => {
       return;
   }
 };
-
-
 
 // connection
 connection.connect((err) => {
