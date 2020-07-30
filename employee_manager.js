@@ -314,6 +314,36 @@ const fnUpdateEmp = async (id) => {
     type: "input",
     message: "Enter new value:",
   });
+
+  switch (col) {
+    case "FIRST_NAME":
+    case "LAST_NAME":
+      break;
+    case "MANAGER_ID":
+    case "ROLE_ID":
+      if (isNaN(val)) {
+        console.log("Enter a valid number");
+        return fnUpdateEntity();
+      }
+      break;
+    case "EXIT":
+      return fnUpdateEntity();
+  }
+
+  // set new value
+  connection.query(
+    `UPDATE employee SET ${col.toLowerCase()} = ? WHERE id = ${id}`,
+    val,
+    (err, data) => {
+      if (err) throw err;
+      // console.log(data);
+      connection.query(`SELECT * FROM employee`, (err, data) => {
+        if (err) throw err;
+        console.table(data);
+        fnMainMenu();
+      });
+    }
+  );
 };
 
 //////////////// * DELETE
